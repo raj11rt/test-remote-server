@@ -6,11 +6,13 @@ import aiosqlite
 from fastmcp import FastMCP
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-DATA_DIR = os.path.join(PROJECT_ROOT, ".data")
-DB_PATH = os.path.join(DATA_DIR, "expenses.db")
+DATA_DIR = os.environ.get("APP_DATA_DIR", os.path.join(PROJECT_ROOT, ".data"))
+DB_PATH = os.environ.get("DB_PATH", os.path.join(DATA_DIR, "expenses.db"))
+HOST = os.environ.get("HOST", "0.0.0.0")
+PORT = int(os.environ.get("PORT", "8000"))
 CATEGORIES_PATH = os.path.join(os.path.dirname(__file__), "categories.json")
 
-os.makedirs(DATA_DIR, exist_ok=True)
+os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
 
 print(f"Database path: {DB_PATH}")
 
@@ -148,7 +150,8 @@ def categories() -> str:
 
 
 def main() -> None:
-    mcp.run(transport="http", host="0.0.0.0", port=8000)
+    os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
+    mcp.run(transport="http", host=HOST, port=PORT)
 
 
 if __name__ == "__main__":
