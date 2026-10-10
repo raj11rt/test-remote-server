@@ -1,14 +1,16 @@
 import json
 import os
 import sqlite3
-import tempfile
 
 import aiosqlite
 from fastmcp import FastMCP
 
-TEMP_DIR = tempfile.gettempdir()
-DB_PATH = os.path.join(TEMP_DIR, "expenses.db")
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+DATA_DIR = os.path.join(PROJECT_ROOT, ".data")
+DB_PATH = os.path.join(DATA_DIR, "expenses.db")
 CATEGORIES_PATH = os.path.join(os.path.dirname(__file__), "categories.json")
+
+os.makedirs(DATA_DIR, exist_ok=True)
 
 print(f"Database path: {DB_PATH}")
 
