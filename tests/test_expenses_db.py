@@ -49,6 +49,26 @@ class ExpenseDatabaseTests(unittest.TestCase):
         self.assertEqual(persisted[0][1], "2024-01-01")
         self.assertEqual(persisted[1][1], "2024-01-02")
 
+    def test_db_path_falls_back_when_preferred_dir_is_invalid(self):
+        base_dir = tempfile.mkdtemp()
+        invalid_parent = os.path.join(base_dir, "blocked")
+        with open(invalid_parent, "w", encoding="utf-8") as handle:
+            handle.write("not a directory")
+
+        candidate = os.path.join(invalid_parent, "expenses.db")
+        original_env = os.environ.get("DB_PATH")
+        os.environ["DB_PATH"] = candidate
+        try:
+            resolved = main_module.resolve_db_path()
+            self.assertNotEqual(candidate, resolved)
+            self.assertTrue(os.path.exists(os.path.dirname(resolved)))
+        finally:
+            if original_env is None:
+                os.environ.pop("DB_PATH", None)
+            else:
+                os.environ["DB_PATH"] = original_env
+            shutil.rmtree(base_dir, ignore_errors=True)
+
 
 if __name__ == "__main__":
     unittest.main()

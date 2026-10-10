@@ -1,19 +1,44 @@
 import json
 import os
 import sqlite3
+import tempfile
 
 import aiosqlite
 from fastmcp import FastMCP
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 DATA_DIR = os.environ.get("APP_DATA_DIR", os.path.join(PROJECT_ROOT, ".data"))
-DB_PATH = os.environ.get("DB_PATH", os.path.join(DATA_DIR, "expenses.db"))
 HOST = os.environ.get("HOST", "0.0.0.0")
 PORT = int(os.environ.get("PORT", "8000"))
 CATEGORIES_PATH = os.path.join(os.path.dirname(__file__), "categories.json")
 
-os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
 
+def resolve_db_path() -> str:
+    candidates = []
+    env_path = os.environ.get("DB_PATH")
+    if env_path:
+        candidates.append(env_path)
+    candidates.append(os.path.join(DATA_DIR, "expenses.db"))
+    candidates.append(
+        os.path.join(tempfile.gettempdir(), "test_remote_server", "expenses.db")
+    )
+
+    for candidate in candidates:
+        directory = os.path.dirname(candidate) or "."
+        try:
+            os.makedirs(directory, exist_ok=True)
+            test_file = os.path.join(directory, ".write_test")
+            with open(test_file, "w", encoding="utf-8") as handle:
+                handle.write("ok")
+            os.remove(test_file)
+            return candidate
+        except OSError:
+            continue
+
+    return os.path.join(tempfile.gettempdir(), "test_remote_server", "expenses.db")
+
+
+DB_PATH = resolve_db_path()
 print(f"Database path: {DB_PATH}")
 
 mcp = FastMCP("ExpenseTracker")
